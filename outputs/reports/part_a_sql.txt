@@ -1,0 +1,65 @@
+## Task 6 - SQL results (pd.read_sql_query against data/instamart.db)
+Q1 WHERE then HAVING: 30 customers (largest: C0693 INR 13,776.55)
+Q2 three-table join: 30 rows; revenues add up to INR 2,998,668.80; largest cell Bengaluru / Electronics INR 233,909.45
+Q3 scalar subquery: 11 products above the average catalogue price (average INR 289.32)
+Q4 LEFT JOIN: 25 customers have no completed order
+Q5 CTE: 550 customers above the average completed spend of INR 2,552.06
+Q6 window ranking - top customer per city: Bengaluru C0082 (12,856.20), Chennai C0930 (10,151.40), Delhi C0291 (13,742.60), Hyderabad C0743 (12,730.05), Mumbai C0693 (14,766.55), Pune C0426 (10,377.10)
+   rows where RANK() differs from ROW_NUMBER(): 8
+     Bengaluru C0734 spend 2,598.00 rank 99 dense_rank 99 row_number 100
+     Bengaluru C0723 spend 135.00 rank 179 dense_rank 178 row_number 180
+     Mumbai C1053 spend 396.00 rank 149 dense_rank 149 row_number 150
+     Mumbai C0608 spend 280.00 rank 160 dense_rank 159 row_number 161
+     Pune C1064 spend 3,236.95 rank 74 dense_rank 74 row_number 75
+     Pune C0057 spend 285.00 rank 189 dense_rank 188 row_number 190
+     Pune C0936 spend 285.00 rank 189 dense_rank 188 row_number 191
+     Pune C0276 spend 114.00 rank 209 dense_rank 206 row_number 210
+Q7 running total: 183 daily rows; first day 2025-04-01, last day 2025-09-30, last cumulative INR 2,998,668.80
+
+## Task 7a - pandas cross-check of Q2
+category       Dairy  Electronics    Grocery  Personal Care     Snacks       Total
+city                                                                              
+Bengaluru   87075.05    233909.45  110915.65       20193.85   71549.40   523643.40
+Chennai     78301.80    195508.80   93817.45       27675.40   68325.70   463629.15
+Delhi      117271.70    158549.10  112658.05       23471.50   90879.45   502829.80
+Hyderabad   83731.00    228913.10  109475.40       24800.05   81670.35   528589.90
+Mumbai      75209.85    214738.40   78970.15       38018.00   72122.10   479058.50
+Pune        90349.55    187629.25  108456.60       34275.15   80207.50   500918.05
+Total      531938.95   1219248.10  614293.30      168433.95  464754.50  2998668.80
+pivot grand total INR 2,998,668.80 vs SQL Q2 total INR 2,998,668.80 -> equal
+
+per-city completed order_amount (groupby + named aggregation):
+               total    mean  orders
+city                                
+Hyderabad  528589.90  284.95    1855
+Bengaluru  523643.40  276.47    1894
+Delhi      502829.80  243.62    2064
+Pune       500918.05  252.48    1984
+Mumbai     479058.50  297.00    1613
+Chennai    463629.15  272.72    1700
+
+## Task 7b - exploring completed order_amount
+count                             11,110
+mean                              269.91
+median                            135.00
+skewness                            4.61
+min                                12.00
+Q1 (25%)                           64.80
+Q3 (75%)                          297.00
+max                              3998.00
+IQR                               232.20
+lower fence Q1-1.5xIQR           -283.50
+upper fence Q3+1.5xIQR            645.30
+outliers below lower fence             0
+outliers above upper fence           897
+
+correlation matrix (completed orders):
+                  order_amount  discount_pct  quantity  delivery_minutes
+order_amount             1.000        -0.095     0.087            -0.003
+discount_pct            -0.095         1.000    -0.000            -0.010
+quantity                 0.087        -0.000     1.000            -0.013
+delivery_minutes        -0.003        -0.010    -0.013             1.000
+pairs by |r|: discount_pct~order_amount -0.095, order_amount~quantity +0.087, delivery_minutes~quantity -0.013, delivery_minutes~discount_pct -0.010, delivery_minutes~order_amount -0.003, discount_pct~quantity -0.000
+orders above the upper fence by category: Electronics 635, Dairy 166, Grocery 52, Personal Care 44
+mean / median completed order_amount by category: Dairy 169.68 / 98.60, Electronics 1189.51 / 958.80, Grocery 198.61 / 144.00, Personal Care 291.91 / 252.00, Snacks 141.69 / 95.20
+orders above the upper fence: mean quantity 1.91 vs 1.89 overall; amount range INR 646.00-3,998.00

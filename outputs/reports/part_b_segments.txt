@@ -1,0 +1,39 @@
+## Task 1 - RFM table (snapshot 2025-10-01 00:00:00, completed orders only)
+customers with at least one completed order: 1,175
+       recency  frequency  monetary
+count  1175.00    1175.00   1175.00
+mean     33.56       9.46   2552.06
+std      38.43       8.01   2367.31
+min       0.00       1.00     12.00
+25%       6.00       3.00    505.45
+50%      19.00       5.00   2286.50
+75%      46.00      17.00   3751.52
+max     180.00      33.00  14766.55
+recency median 19, min 0, max 180; frequency mean 9.46, max 33; monetary mean 2,552.06, max 14,766.55
+
+## Task 2 - K-means on standardised RFM (n_init=10, random_state=42)
+  K     inertia  silhouette
+  2      1820.8       0.465
+  3      1268.2       0.445
+  4       743.1       0.526
+  5       617.4       0.480
+  6       503.2       0.482
+  7       408.5       0.416
+  8       366.5       0.412
+chosen K = 4
+
+## Task 3 - segment profiles (cluster numbers are labels only, with no order)
+            size  recency  frequency  monetary               segment_name
+segment_id                                                               
+0            436    28.86       3.77   1057.62  Occasional Light Shoppers
+1            138    24.12       6.77   7129.70       Premium Big Spenders
+2            419     8.77      19.40   3410.02       Loyal Daily Shoppers
+3            182   109.04       2.20    685.99  Lapsing Occasional Buyers
+segment 0 = Occasional Light Shoppers: Grow basket size and frequency with bundled staples offers and a 'third order this month' coupon.
+segment 1 = Premium Big Spenders: Protect with a premium desk, early access to electronics launches and a personal win-back call as soon as recency rises.
+segment 2 = Loyal Daily Shoppers: Reward habit with a grocery subscription or loyalty points; cross-sell personal care and snacks to raise basket value.
+segment 3 = Lapsing Occasional Buyers: Run a low-cost win-back offer (free delivery on the next order) and stop spending on those who still do not return.
+Premium = segment 1 (Premium Big Spenders), highest mean monetary INR 7,129.70; 138 customers flagged
+PCA(n_components=2) on scaled RFM: explained_variance_ratio_ = 0.634, 0.218 (total 0.852)
+PC loadings (recency, frequency, monetary): PC1 -0.58, +0.61, +0.53; PC2 +0.54, -0.20, +0.82
+wrote outputs/customer_segments.csv (1,175 rows)

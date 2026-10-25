@@ -1,0 +1,56 @@
+## Task 1 - chunks (40 words, overlap 10)
+15 chunks in total: refund 4, delivery 3, escalation 3, payment 3, privacy 2
+vocabulary size of the fitted TfidfVectorizer: 200
+
+## Task 2 - retrieve('refund policy late delivery', k=3)
+  refund_policy.txt      score 0.2719  order is delivered in more than 45 minutes, the customer receives a full refund ...
+  refund_policy.txt      score 0.2514  Refund Policy. A refund can be requested only for orders whose status is complet...
+  refund_policy.txt      score 0.2454  late-delivery refund is paid. Refunds up to INR 1000 are approved automatically ...
+
+## Task 3 - answer() example
+  answer: A refund above INR 1000 must be approved by a human support lead before money is returned.
+  sources: ['refund_policy.txt', 'refund_policy.txt', 'refund_policy.txt']
+
+## Task 4 - evaluation on data/raw/policy_eval.csv
+
+with overlap 10:
+question                                                                   doc@3  fact  answer
+What delivery time makes a completed order eligible for a full refund?      True  True  order is delivered in more than 45 minutes, the customer receives a full refund of the order amount.
+Who must approve a refund above INR 1000?                                   True  True  A refund above INR 1000 must be approved by a human support lead before money is returned.
+How many days do I have to raise a refund request?                          True  True  A refund request must be raised within 7 days of the delivery date.
+What is the delivery fee on small orders?                                   True  True  A delivery fee of INR 25 is charged on orders below INR 199, / of INR 25 is charged on orders below 
+On orders of what value is delivery free?                                   True  True  of INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.
+Why does the electronics delivery need a one time password?                 True  True  Electronics items are delivered only after the customer shares a one time password with the rider.
+Is cash on delivery available for a large order?                            True  True  Cash on delivery is available only for orders up to INR 2500.
+How soon is money returned when a payment fails but is deducted?            True  True  If a payment fails but money is deducted, the amount is returned automatically / fails but money is 
+Can wallet balance be refunded as cash?                                     True  True  Wallet balance can be used for any order and is never refunded as cash.
+When are delivery addresses deleted from active systems?                    True  True  Delivery addresses are deleted from active systems 180 days after / Delivery addresses are deleted f
+How fast must a fraud ticket reach the security team?                       True  True  A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security
+After how many steps must an automated assistant hand over to a human?      True  True  If an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human a
+What is the favourite colour of the company mascot?                            -  True  I could not find that information in the policy documents.
+Who won the cricket world cup final?                                           -  True  I could not find that information in the policy documents.
+expected_doc in top 3: 12/12; answer contains expected_fact: 12/12; unanswerable -> fallback: 2/2
+
+zero-overlap index: 13 chunks
+
+with overlap 0:
+question                                                                   doc@3  fact  answer
+What delivery time makes a completed order eligible for a full refund?      True False  receives a full refund of the order amount.
+Who must approve a refund above INR 1000?                                   True  True  A refund above INR / 1000 must be approved by a human support lead before money is returned.
+How many days do I have to raise a refund request?                          True  True  A refund request must be raised within 7 days of the delivery date.
+What is the delivery fee on small orders?                                   True  True  A delivery fee of INR 25 is charged on orders below INR 199, / Payment Policy.
+On orders of what value is delivery free?                                   True  True  A delivery fee of INR 25 is charged on orders below INR 199, / and delivery is free on orders of INR
+Why does the electronics delivery need a one time password?                 True  True  Electronics items are delivered only after the customer shares a one time password with the rider.
+Is cash on delivery available for a large order?                            True  True  Cash on delivery is available only for orders up to INR 2500.
+How soon is money returned when a payment fails but is deducted?            True False  If a payment fails but money is deducted, the amount is returned automatically / 1000 must be approv
+Can wallet balance be refunded as cash?                                     True  True  Wallet balance can be used for any order and is never refunded as cash.
+When are delivery addresses deleted from active systems?                    True  True  Delivery addresses are deleted from active systems 180 days after / Delivery Policy.
+How fast must a fraud ticket reach the security team?                       True  True  A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security
+After how many steps must an automated assistant hand over to a human?      True  True  an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agen
+What is the favourite colour of the company mascot?                            -  True  I could not find that information in the policy documents.
+Who won the cricket world cup final?                                           -  True  I could not find that information in the policy documents.
+expected_doc in top 3: 12/12; answer contains expected_fact: 10/12; unanswerable -> fallback: 2/2
+BREAKS with overlap 0: 'What delivery time makes a completed order eligible for a full refund?' expected 'more than 45 minutes' from refund_policy.txt; got 'receives a full refund of the order amount.' (sources ['refund_policy.txt', 'refund_policy.txt', 'privacy_policy.txt'])
+   the sentence is cut at a chunk boundary: '...delivered in more than 45 minutes, the customer' | 'receives a full refund of the order amount....'
+BREAKS with overlap 0: 'How soon is money returned when a payment fails but is deducted?' expected '48 hours' from payment_policy.txt; got 'If a payment fails but money is deducted, the amount is returned automatically / 1000 must be approved by a human support lead before money is returned.' (sources ['payment_policy.txt', 'refund_policy.txt', 'privacy_policy.txt'])
+   the sentence is cut at a chunk boundary: '...money is deducted, the amount is returned automatically' | 'within 48 hours. A customer who sees two...'

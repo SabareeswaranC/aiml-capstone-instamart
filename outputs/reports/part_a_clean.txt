@@ -1,0 +1,31 @@
+# Part A - cleaning rules and the rows/values each one changed
+## customers.csv
+(a) city strip + title case: 476 values changed; 24 spellings -> 6 cities
+(b) gender mapped to male/female/unknown: 950 values changed (30 blanks -> unknown)
+(c) ages outside 10-100 set to missing: 6 (280, -4, 0, 150, 999, 200)
+    missing ages filled with the city median (groupby + transform): 67 values filled
+    city medians used: Bengaluru 42, Chennai 39, Delhi 43, Hyderabad 37.5, Mumbai 38.5, Pune 39
+(d) signup_date converted to datetime: 1200 values
+
+## orders.csv
+start: 13,084 rows
+i.   order_ts converted to datetime: 13,084 values
+ii.  exact duplicate rows removed: 119 -> 12,965 rows
+iii. earlier records of repeated order_ids removed: 656 -> 12,309 rows (statuses of removed rows: pending 656)
+iv.  unparseable order_amount -> missing -> refilled from price x quantity x (1 - discount/100): 112 values
+v.   negative delivery_minutes set to missing: 105
+     completed orders with missing delivery_minutes filled with the category median among completed orders (groupby + transform): 774 values
+     category medians used: Dairy 25, Electronics 25, Grocery 25, Personal Care 25.5, Snacks 25
+     cancelled orders left with missing delivery_minutes: 1199 (never delivered, so no time is invented)
+
+## after cleaning
+cities: Pune 227, Delhi 210, Bengaluru 197, Chennai 191, Hyderabad 191, Mumbai 184
+genders: female 610, male 560, unknown 30
+missing ages: 0; age range 18.0-60.0
+orders: 12,309 rows, 12,309 distinct order_id
+statuses: completed 11,110, cancelled 1,199
+missing order_amount: 0
+missing delivery_minutes by status: cancelled 1,199, completed 0
+sum of order_amount over completed orders: INR 2,998,668.80
+
+wrote data/clean/{customers,products,orders}.csv and data/instamart.db tables {'customers': 1200, 'products': 40, 'orders': 12309}

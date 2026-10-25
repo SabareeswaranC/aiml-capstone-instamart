@@ -1,0 +1,53 @@
+## Task 4 - lapse problem (cutoff 2025-09-01)
+cohort (>=1 completed order before the cutoff): 1,156 customers; lapsed 443 (38.32%), not lapsed 713
+latest order date used by any feature: 2025-08-31 22:35:45 (< cutoff)
+train 924 rows (354 lapsed), test 232 rows (89 lapsed)
+baseline (always 'not lapsed') on test: confusion matrix [[TN 143, FP 0], [FN 89, TP 0]]; lapsed-class precision 0.000, recall 0.000, F1 0.000; accuracy 0.616
+
+## Task 5 - preprocessing without leakage
+learned mean of frequency in the fitted scaler (training rows): 8.1147
+mean of frequency over the full cohort: 8.0285
+they differ because the scaler only ever saw the 924 training rows; the 232 test rows never influenced its mean or standard deviation.
+one-hot columns (k-1 per variable, fitted on train): city_Chennai, city_Delhi, city_Hyderabad, city_Mumbai, city_Pune, gender_male, gender_unknown, fav_category_Electronics, fav_category_Grocery, fav_category_Personal Care, fav_category_Snacks
+missing values across all feature columns: 0 (asserted in code)
+
+## Task 6 - tuning with 5-fold GridSearchCV (scoring = F1 of the lapsed class)
+logistic regression: best {'model__C': 100}, best CV F1 0.651 (25 fits)
+random forest: best {'model__max_depth': 8, 'model__min_samples_leaf': 10}, best CV F1 0.681 (45 fits)
+test set (used only now, after tuning):
+  tuned logistic regression: confusion matrix [[TN 111, FP 32], [FN 31, TP 58]]; lapsed-class precision 0.644, recall 0.652, F1 0.648; accuracy 0.728
+  tuned random forest: confusion matrix [[TN 113, FP 30], [FN 31, TP 58]]; lapsed-class precision 0.659, recall 0.652, F1 0.655; accuracy 0.737
+  baseline F1 0.000 -> logistic 0.648, forest 0.655
+selected model: random forest
+
+## Task 7 - class-balance experiment (over-sample the training set only)
+training rows 924 -> 1140; class counts {1: 570, 0: 570} (216 lapsed duplicates added)
+  balanced logistic regression on the original test set: confusion matrix [[TN 90, FP 53], [FN 13, TP 76]]; lapsed-class precision 0.589, recall 0.854, F1 0.697; accuracy 0.716
+  un-balanced -> balanced: precision 0.644 -> 0.589, recall 0.652 -> 0.854, F1 0.648 -> 0.697
+
+## Task 8a - interpretation
+random forest top-5 feature importances: frequency 0.280, monetary 0.271, recency 0.115, avg_delivery_minutes 0.061, cancel_rate 0.052
+logistic coefficient recency: +0.040 (per standard deviation)
+logistic coefficient frequency: -1.698 (per standard deviation)
+logistic coefficient cancel_rate: -0.124 (per standard deviation)
+logistic coefficient monetary: +0.285 (per standard deviation)
+logistic coefficient avg_delivery_minutes: +0.079 (per standard deviation)
+
+## Task 8b - persistence
+saved random forest to outputs/lapse_model.joblib; reloaded model reproduces all 232 test predictions and probabilities exactly: True
+
+## Task 8c - retention list (Premium test-set customers ranked by lapse probability)
+Premium customers in the test set: 40; wrote top 10 to outputs/retention_list.csv
+customer_id  lapse_probability  actually_lapsed
+      C0862             0.4910                0
+      C1112             0.4841                0
+      C0060             0.4798                0
+      C0802             0.4796                0
+      C1008             0.4778                0
+      C1000             0.4624                0
+      C0525             0.4597                1
+      C0133             0.4562                0
+      C0267             0.4525                0
+      C0565             0.4499                1
+of these 10, 2 truly lapsed
+note: the Premium flag comes from whole-window RFM that includes September, so it is a post-hoc label and this list is illustrative, not a leakage-free evaluation.

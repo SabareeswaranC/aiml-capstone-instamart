@@ -1,0 +1,40 @@
+## Task 5 - tools
+  get_order(order_id) - Look up one order in the Instamart database by its order id.
+  search_policy(query) - Retrieve the three policy chunks most relevant to a query.
+  calculate_refund(order_amount, delivery_minutes) - Compute the refund: 100% of the amount if delivery took more than 45 minutes, else 0.
+  issue_refund(order_id, refund_inr) - Issue a refund of at most INR 1000 and record it in the refund ledger.
+  escalate_to_human(order_id, refund_inr) - Send a refund above INR 1000 to a human support lead and record it in the ledger.
+TOOL_MAP: get_order, search_policy, calculate_refund, issue_refund, escalate_to_human
+
+## Task 6 - seven scenarios (max_iterations=6, token_limit=6000, time_limit_seconds=10)
+id  expected  status                     refund INR expected INR calls tokens  tools
+S1  REFUND    REFUND                         128.25       128.25     5   1147  get_order > search_policy > calculate_refund > issue_refund  OK
+      final answer: REFUND: INR 128.25 issued.
+S2  REFUND    REFUND                         135.00       135.00     5   1147  get_order > search_policy > calculate_refund > issue_refund  OK
+      final answer: REFUND: INR 135.0 issued.
+S3  ESCALATE  ESCALATE                      1999.00      1999.00     5   1134  get_order > search_policy > calculate_refund > escalate_to_human  OK
+      final answer: ESCALATE: refund above INR 1000 sent to a human lead.
+S4  DENIED    DENIED                           0.00         0.00     4    805  get_order > search_policy > calculate_refund  OK
+      final answer: DENIED: delivery was within 45 minutes.
+S5  DENIED    DENIED                           0.00         0.00     3    487  get_order > search_policy  OK
+      final answer: DENIED: only completed orders can be refunded.
+S6  NOT_FOUND NOT_FOUND                        0.00         0.00     2    172  get_order  OK
+      final answer: NOT_FOUND: no such order.
+S7  FALLBACK  FALLBACK_MAX_ITERATIONS          0.00         0.00     6   3300  search_policy > search_policy > search_policy > search_policy > search_policy (requested, not executed: search_policy)  OK
+      final answer: HANDOFF: 6 model calls without a final answer. Request: '[LOOP] Refund order ORD-100048.'. Tools completed so far: search_policy, search_policy, search_policy, search_policy, search_policy. Model calls 6, tokens 3300. A human agent should review and decide.
+all seven scenarios match expected outcome and refund: True
+
+## Task 7 - stop safely
+S1 with token_limit=200 -> FALLBACK_TOKEN_LIMIT after 2 model calls, 202 tokens; tools executed ['get_order']; requested but not executed: ['search_policy']
+      final answer: HANDOFF: token limit of 200 exceeded (202 used). Request: 'My order ORD-100048 reached me very late. I would like a refund.'. Tools completed so far: get_order. Model calls 2, tokens 202. A human agent should review and decide.
+S1 with time_limit_seconds=0 -> FALLBACK_TIMEOUT after 0 model calls
+      final answer: HANDOFF: time limit of 0 s reached. Request: 'My order ORD-100048 reached me very late. I would like a refund.'. Tools completed so far: none. Model calls 0, tokens 0. A human agent should review and decide.
+
+## Task 8 - crash and resume (S1, crash right after the 2nd tool execution)
+crashed: simulated crash after tool #2 (search_policy); checkpoint state/demo-S1-crash-resume.json holds step 2, tools ['get_order', 'search_policy'], 6 messages, 202 tokens
+resumed run demo-S1-crash-resume: status REFUND, refund INR 128.25, total model calls 5, tokens 1147
+tools before the crash: ['get_order', 'search_policy']; after the resume: ['calculate_refund', 'issue_refund']
+all tool executions in order: ['get_order', 'search_policy', 'calculate_refund', 'issue_refund'] (4 executions, none repeated)
+
+refund_ledger.jsonl: 4 entries - issue_refund ORD-100048 INR 128.25; issue_refund ORD-100067 INR 135.00; escalate_to_human ORD-100145 INR 1999.00; issue_refund ORD-100048 INR 128.25
+agent_runs.jsonl: 10 runs; state/: 10 checkpoint files
