@@ -1,0 +1,16 @@
+# secrets (never commit API keys)
+.env
+# virtual environments
+.venv/
+venv/
+env/
+# Python caches
+__pycache__/
+*.pyc
+# local, non-graded material
+.brief/
+.DS_Store
+# charts are optional and must not be committed
+*.png
+*.jpg
+*.svg
